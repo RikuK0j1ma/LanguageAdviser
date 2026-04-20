@@ -1,7 +1,9 @@
 // ─── OpenAI API Integration ───
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_TRANSCRIBE_URL = 'https://api.openai.com/v1/audio/transcriptions';
 const MODEL = 'gpt-4o-mini';
+const TRANSCRIBE_MODEL = 'gpt-4o-mini-transcribe';
 
 export interface AdviceResult {
     isNatural: boolean;
@@ -61,4 +63,26 @@ export async function analyzeUtterance(apiKey: string, utterance: string): Promi
 
     const parsed = JSON.parse(content) as AdviceResult;
     return parsed;
+}
+
+export async function transcribeAudio(apiKey: string, audio: Blob): Promise<string> {
+    const form = new FormData();
+    form.append('file', audio, 'speech.wav');
+    form.append('model', TRANSCRIBE_MODEL);
+    form.append('language', 'en');
+    form.append('response_format', 'json');
+
+    const res = await fetch(OPENAI_TRANSCRIBE_URL, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}` },
+        body: form,
+    });
+
+    if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`OpenAI Transcription error (${res.status}): ${err}`);
+    }
+
+    const data = await res.json();
+    return typeof data.text === 'string' ? data.text : '';
 }

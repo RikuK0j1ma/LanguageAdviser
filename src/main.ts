@@ -6,7 +6,7 @@ import {
     TextContainerUpgrade,
 } from '@evenrealities/even_hub_sdk';
 import { analyzeUtterance, type AdviceResult } from './openai.ts';
-import { startListening, stopListening, getIsListening, isSpeechSupported } from './speech.ts';
+import { startListening, stopListening, getIsListening } from './speech.ts';
 
 // ─── Constants ───
 
@@ -197,11 +197,11 @@ function onMicClick() {
     const transcriptEl = document.getElementById('transcript');
     const micBtn = document.getElementById('micBtn');
 
-    startListening({
+    startListening(bridge, apiKey, {
         onStart() {
             micBtn?.classList.add('listening');
-            if (micBtn) micBtn.textContent = 'Listening...';
-            setStatus('聞いています... 英語で話してください');
+            if (micBtn) micBtn.textContent = 'Stop';
+            setStatus('録音中... 話し終わったらStopを押してください');
             showOnGlasses('Listening...');
             if (transcriptEl) {
                 transcriptEl.textContent = '';
@@ -210,17 +210,25 @@ function onMicClick() {
             show('transcript');
         },
 
-        onResult(transcript: string, isFinal: boolean) {
+        onRecording(bytesSoFar: number) {
+            const seconds = (bytesSoFar / (16000 * 2)).toFixed(1);
             if (transcriptEl) {
-                transcriptEl.textContent = transcript;
-                if (isFinal) {
-                    transcriptEl.classList.remove('interim');
-                }
+                transcriptEl.textContent = `録音中: ${seconds}s`;
             }
+        },
 
-            if (isFinal && transcript.trim()) {
-                handleFinalTranscript(transcript.trim());
+        onTranscribing() {
+            if (transcriptEl) {
+                transcriptEl.textContent = '書き起こし中...';
+                transcriptEl.classList.remove('interim');
             }
+            setStatus('書き起こし中...');
+            showOnGlasses('Transcribing...');
+        },
+
+        onFinalTranscript(transcript: string) {
+            if (transcriptEl) transcriptEl.textContent = transcript;
+            handleFinalTranscript(transcript);
         },
 
         onError(error: string) {
@@ -283,15 +291,10 @@ async function handleFinalTranscript(utterance: string) {
 async function init() {
     renderUI();
 
-    // Check speech support
-    if (!isSpeechSupported()) {
-        setStatus('このブラウザは音声認識に対応していません。Chromeをご利用ください。');
-    }
-
     // Load saved API key
     apiKey = localStorage.getItem(LS_API_KEY) || '';
 
-    // Init glasses (non-blocking)
+    // Init glasses (non-blocking). The G2 mic is used for audio capture.
     initGlasses();
 
     // Route to correct UI state
