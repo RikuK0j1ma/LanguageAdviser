@@ -1,5 +1,7 @@
 // ─── OpenAI API Integration ───
 
+import { getLanguage, type LangCode } from './languages.ts';
+
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 const OPENAI_TRANSCRIBE_URL = 'https://api.openai.com/v1/audio/transcriptions';
 const MODEL = 'gpt-4o-mini';
@@ -12,29 +14,41 @@ export interface AdviceResult {
     tip: string;
 }
 
-const SYSTEM_PROMPT = `あなたは英語のネイティブスピーカーであり、日本人の英語学習者を支援する言語アドバイザーです。
-ユーザーが英語で発話した内容を受け取り、以下の観点で分析してください：
+function buildSystemPrompt(targetLang: LangCode, explainLang: LangCode): string {
+    const target = getLanguage(targetLang).promptName;
+    const explain = getLanguage(explainLang).promptName;
 
-1. その表現がネイティブスピーカーにとって自然かどうか
-2. 不自然な場合、どう直せば自然になるか
-3. なぜその修正が必要なのか（日本語で簡潔に説明）
+    return `You are a native-level ${target} speaker and a language coach.
+The learner is practicing ${target}. Write ALL explanations and tips in ${explain}.
+The learner just said a sentence in ${target}. Analyze it on:
 
-必ず以下のJSON形式で回答してください。他のテキストは含めないでください：
+1. Is it natural for a ${target} native speaker?
+2. If unnatural, how should it be rewritten to sound natural?
+3. Why does the fix matter? (explain briefly in ${explain})
+
+Respond with ONLY this JSON object, nothing else:
 {
-  "isNatural": true/false,
-  "corrected": "修正後の英文（自然な場合は元の文をそのまま）",
-  "explanation": "日本語での解説（なぜ不自然なのか、どう直したのか。自然な場合は褒めるコメント。2〜3文程度で簡潔に）",
-  "tip": "グラスに表示する短いアドバイス（日本語で1文以内。例：『makeよりdoを使おう』）"
+  "isNatural": true or false,
+  "corrected": "the corrected sentence in ${target} (or the original if already natural)",
+  "explanation": "2-3 sentence explanation in ${explain}: why it was unnatural and what you changed, or a short compliment if natural",
+  "tip": "one short line in ${explain} shown on AR glasses (e.g. a rule of thumb)"
 }
 
-注意点：
-- 文法的に正しくても、ネイティブが普段使わない不自然な表現は指摘してください
-- 直訳調の英語（日本語の直訳）には特に注意してください
-- コロケーション（単語の自然な組み合わせ）の誤りも指摘してください
-- 表現が自然な場合は素直に褒めてください
-- 解説は日本語で、修正文は英語で返してください`;
+Guidelines:
+- Flag expressions that are grammatical but not how natives would say it.
+- Flag literal translations from other languages.
+- Flag collocation errors (unnatural word combinations).
+- Praise genuinely natural phrasing.
+- Corrections are written in ${target}. Explanations and tips are written in ${explain}.
+- If target and explanation languages are the same, still follow the JSON format.`;
+}
 
-export async function analyzeUtterance(apiKey: string, utterance: string): Promise<AdviceResult> {
+export async function analyzeUtterance(
+    apiKey: string,
+    utterance: string,
+    targetLang: LangCode,
+    explainLang: LangCode,
+): Promise<AdviceResult> {
     const res = await fetch(OPENAI_API_URL, {
         method: 'POST',
         headers: {
@@ -44,7 +58,7 @@ export async function analyzeUtterance(apiKey: string, utterance: string): Promi
         body: JSON.stringify({
             model: MODEL,
             messages: [
-                { role: 'system', content: SYSTEM_PROMPT },
+                { role: 'system', content: buildSystemPrompt(targetLang, explainLang) },
                 { role: 'user', content: utterance },
             ],
             temperature: 0.3,
@@ -65,11 +79,15 @@ export async function analyzeUtterance(apiKey: string, utterance: string): Promi
     return parsed;
 }
 
-export async function transcribeAudio(apiKey: string, audio: Blob): Promise<string> {
+export async function transcribeAudio(
+    apiKey: string,
+    audio: Blob,
+    targetLang: LangCode,
+): Promise<string> {
     const form = new FormData();
     form.append('file', audio, 'speech.wav');
     form.append('model', TRANSCRIBE_MODEL);
-    form.append('language', 'en');
+    form.append('language', getLanguage(targetLang).whisperCode);
     form.append('response_format', 'json');
 
     const res = await fetch(OPENAI_TRANSCRIBE_URL, {

@@ -54,6 +54,66 @@ input::placeholder {
     line-height: 1.6;
 }
 
+.lang-row {
+    margin: 10px 0;
+}
+
+.lang-row label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #b0b0b0;
+    gap: 10px;
+}
+
+.lang-row select {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #16213e;
+    color: #e0e0e0;
+    font-size: 14px;
+}
+
+#langBadge {
+    font-size: 12px;
+    color: #4FC3F7;
+    margin: 4px 0 10px 0;
+    text-align: center;
+    letter-spacing: 0.3px;
+}
+
+#settingsBtn {
+    background: transparent;
+    color: #4FC3F7;
+    border: 1px solid #333;
+    font-size: 12px;
+    padding: 8px 16px;
+    margin-top: 12px;
+}
+
+#historyActions {
+    display: flex;
+    gap: 8px;
+    margin: 8px 0 4px 0;
+}
+
+#historyActions button.secondary {
+    flex: 1;
+    background: transparent;
+    color: #4FC3F7;
+    border: 1px solid #333;
+    font-size: 12px;
+    padding: 8px 10px;
+    margin: 0;
+}
+
+#historyActions button.secondary.danger {
+    color: #ef9a9a;
+}
+
 .hint a {
     color: #4FC3F7;
     text-decoration: none;

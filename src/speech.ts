@@ -7,6 +7,7 @@
 
 import type { EvenAppBridge, EvenHubEvent } from '@evenrealities/even_hub_sdk';
 import { transcribeAudio } from './openai.ts';
+import type { LangCode } from './languages.ts';
 
 const SAMPLE_RATE = 16000;
 const BITS_PER_SAMPLE = 16;
@@ -24,6 +25,7 @@ export interface SpeechCallbacks {
 interface Session {
     bridge: EvenAppBridge;
     apiKey: string;
+    targetLang: LangCode;
     callbacks: SpeechCallbacks;
     chunks: Uint8Array[];
     totalBytes: number;
@@ -43,10 +45,11 @@ export function getIsListening(): boolean {
 export async function startListening(
     bridge: EvenAppBridge | null,
     apiKey: string,
+    targetLang: LangCode,
     callbacks: SpeechCallbacks,
 ): Promise<boolean> {
     if (!bridge) {
-        callbacks.onError('G2グラスに接続されていません。Even Appでアプリを起動してください。');
+        callbacks.onError('G2 glasses not connected. Launch the app from Even App.');
         return false;
     }
     if (session) {
@@ -56,6 +59,7 @@ export async function startListening(
     const s: Session = {
         bridge,
         apiKey,
+        targetLang,
         callbacks,
         chunks: [],
         totalBytes: 0,
@@ -76,12 +80,12 @@ export async function startListening(
         const ok = await bridge.audioControl(true);
         if (!ok) {
             teardown(s);
-            callbacks.onError('マイクを開けませんでした。グラスの接続を確認してください。');
+            callbacks.onError('Could not open mic. Check the glasses connection.');
             return false;
         }
     } catch (e) {
         teardown(s);
-        callbacks.onError(`マイク起動エラー: ${e instanceof Error ? e.message : String(e)}`);
+        callbacks.onError(`Mic start error: ${e instanceof Error ? e.message : String(e)}`);
         return false;
     }
 
@@ -102,7 +106,7 @@ export async function stopListening(): Promise<void> {
     if (s.unsubscribe) s.unsubscribe();
 
     if (s.totalBytes < SAMPLE_RATE) {
-        s.callbacks.onError('音声が短すぎます。もう少し長く話してください。');
+        s.callbacks.onError('Audio too short. Please speak a bit longer.');
         s.callbacks.onEnd();
         return;
     }
@@ -110,15 +114,15 @@ export async function stopListening(): Promise<void> {
     s.callbacks.onTranscribing();
     try {
         const wav = buildWav(s.chunks, s.totalBytes);
-        const text = await transcribeAudio(s.apiKey, wav);
+        const text = await transcribeAudio(s.apiKey, wav, s.targetLang);
         const trimmed = text.trim();
         if (!trimmed) {
-            s.callbacks.onError('音声を認識できませんでした。もう一度お試しください。');
+            s.callbacks.onError('Could not recognize speech. Please try again.');
         } else {
             s.callbacks.onFinalTranscript(trimmed);
         }
     } catch (e) {
-        s.callbacks.onError(`音声認識エラー: ${e instanceof Error ? e.message : String(e)}`);
+        s.callbacks.onError(`Transcription error: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
         s.callbacks.onEnd();
     }
