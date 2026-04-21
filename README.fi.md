@@ -9,7 +9,7 @@ Analysoi käyttäjän puheen kohdekielellä, arvioi kuulostaako ilmaisu natiivip
 
 ## Kohdekäyttäjä
 
-Oppijat, jotka hallitsevat kohdekielen perussäännöt ja -sanaston ja pystyvät keskustelemaan, mutta kamppailevat vielä ilmaisun luontevuuden kanssa (CEFR B1).
+Oppijat, jotka hallitsevat kohdekielen perussäännöt ja -sanaston ja pystyvät keskustelemaan, mutta kamppailevat vielä ilmaisun luontevuuden kanssa (keskitaso — esim. suomea opiskellessa YKI taso 3, englantia CEFR B1 / Cambridge PET, japania JLPT N3, kiinaa HSK 4, saksaa Goethe-Zertifikat B1).
 
 ## Tuetut kielet
 

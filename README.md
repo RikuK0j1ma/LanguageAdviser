@@ -9,7 +9,7 @@ Analyze the user's speech in a target language, judge whether the expression sou
 
 ## Target user
 
-Learners who already have the basic grammar and vocabulary of the target language and can hold a conversation, but still struggle with naturalness (CEFR B1 level).
+Learners who already have the basic grammar and vocabulary of the target language and can hold a conversation, but still struggle with naturalness (intermediate level — roughly CEFR B1 / Cambridge PET for English, JLPT N3 for Japanese, Goethe-Zertifikat B1 for German, HSK 4 for Chinese, YKI taso 3 for Finnish).
 
 ## Supported languages
 

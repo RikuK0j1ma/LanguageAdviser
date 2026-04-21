@@ -9,7 +9,7 @@ Analysiert gesprochene Äußerungen in der Lernsprache, bewertet, ob der Ausdruc
 
 ## Zielgruppe
 
-Lernende, die Grundgrammatik und Grundwortschatz der Zielsprache beherrschen und Gespräche führen können, aber mit der Natürlichkeit des Ausdrucks kämpfen (CEFR B1).
+Lernende, die Grundgrammatik und Grundwortschatz der Zielsprache beherrschen und Gespräche führen können, aber mit der Natürlichkeit des Ausdrucks kämpfen (Mittelstufe — z. B. Goethe-Zertifikat B1 für Deutsch, CEFR B1 / Cambridge PET für Englisch, JLPT N3 für Japanisch, HSK 4 für Chinesisch, YKI taso 3 für Finnisch).
 
 ## Unterstützte Sprachen
 
