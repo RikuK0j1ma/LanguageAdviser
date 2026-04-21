@@ -1,82 +1,127 @@
 # Language Adviser for Even G2
 
-Even G2 スマートグラス向けの英語スピーキングコーチアプリです。
-ユーザーが英語で話した内容をリアルタイムで分析し、ネイティブスピーカーにとって自然な表現かどうかを判定して、改善アドバイスを提供します。
+**English** | **[日本語](README.ja.md)** | **[Deutsch](README.de.md)** | **[中文](README.zh.md)** | **[Suomi](README.fi.md)**
 
-## 対象ユーザー
+---
 
-英語の基本的な文法や語彙は身についており、ネイティブスピーカーとの会話自体は可能だが、表現の自然さにまだ課題がある方（CEFR B1レベル相当）を想定しています。
+A speaking coach app for Even G2 smart glasses.
+Analyze the user's speech in a target language, judge whether the expression sounds natural to a native speaker, and return advice in any chosen explanation language.
 
-## 機能
+## Target user
 
-- **音声認識**: マイクボタンを押して英語で話すと、発話内容をリアルタイムで文字起こし
-- **自然さ判定**: OpenAI（gpt-4o-mini）がネイティブの視点で表現の自然さを分析
-- **修正提案**: 不自然な表現に対して、より自然な言い方を英語で提示
-- **日本語解説**: なぜ不自然なのか、どう直すべきかを日本語で解説
-- **グラス表示**: 修正文とワンポイントアドバイスを Even G2 グラスにリアルタイム表示
-- **履歴**: 直近5件の発話と分析結果を一覧表示
+Learners who already have the basic grammar and vocabulary of the target language and can hold a conversation, but still struggle with naturalness (CEFR B1 level).
 
-## 必要なもの
+## Supported languages
 
-- [Node.js](https://nodejs.org/) v18 以上
-- [OpenAI API キー](https://platform.openai.com/api-keys)
-- 音声認識に対応したブラウザ（Chrome 推奨）
-- Even G2 スマートグラス（グラス表示を使う場合）
+Both the target (practice) language and the explanation language can be chosen from the list. Any combination works, including the same language for both.
 
-## セットアップ
+- English
+- Japanese (日本語)
+- German (Deutsch)
+- Chinese (中文)
+- Finnish (suomi)
+
+## Features
+
+- **Speech recognition**: Audio is captured from the G2 glasses mic and transcribed via OpenAI Whisper (`gpt-4o-mini-transcribe`)
+- **Naturalness check**: `gpt-4o-mini` analyzes the utterance from a native speaker's viewpoint
+- **Rewrite suggestion**: Unnatural expressions are rewritten in natural target-language form
+- **Multilingual explanation**: Why it was unnatural and how to fix it, returned in the chosen explanation language
+- **Glasses display**: The corrected sentence and a short tip are shown on Even G2
+- **Language pair setting**: Target and explanation languages are selected independently and can be changed anytime from the Settings screen
+- **Persistent history**: Utterances, corrections, explanations, tips, language pair and timestamps are stored in LocalStorage (latest 200 entries)
+- **Export**: Download the history as JSON or CSV (UTF-8 with BOM, opens directly in Excel)
+- **Clear history**: Wipe all stored entries in one click
+
+## Requirements
+
+- [Node.js](https://nodejs.org/) v18+
+- [OpenAI API key](https://platform.openai.com/api-keys)
+- Even G2 smart glasses + Even Hub app (required — the app uses the glasses' microphone)
+
+## Setup
 
 ```bash
-# 依存パッケージのインストール
 npm install
-
-# 開発サーバーの起動
 npm run dev
 ```
 
-ブラウザで `http://localhost:5174` を開きます。
+Open `http://localhost:5174` in a browser.
 
-### Even G2 実機でテストする場合
+### Running on real G2 hardware
 
 ```bash
-# QRコード付きでネットワーク上に公開
 npm run qr
 ```
 
-表示される QR コードをスマートフォンで読み取り、Even Hub アプリから接続してください。
+Scan the QR with your phone, then connect from the Even Hub app.
 
-> **注意**: HTTPS が必要な場合は `vite.config.ts` に SSL 証明書の設定を追加してください。
+> If HTTPS is required, add an SSL cert config to `vite.config.ts`.
 
-## 使い方
+## Usage
 
-1. 初回起動時に OpenAI API キーを入力して「保存」を押す
-2. 「Tap to Speak」ボタンを押す
-3. 英語で話す（ボタンが赤くなり、聞き取り中であることを示します）
-4. 発話が終わると自動的に分析が開始される
-5. 結果がスマホ画面と Even G2 グラスに表示される
+1. First launch: enter your OpenAI API key, pick a target language (I want to practice) and an explanation language (Explain to me in), then press `Save`
+2. Tap `Tap to Speak` and speak in the target language through the G2 mic
+3. Press `Stop` → transcription → analysis
+4. The result is shown both on the phone screen and on the G2 glasses
+5. The last five entries are listed at the bottom; use Export to get the full history
 
-### 分析結果の見方
+### Changing the language pair
 
-- **Natural!**（緑）: 表現が自然です。そのまま自信を持って使ってください。
-- **More natural way:**（赤）: より自然な言い方があります。修正文・解説・Tip を確認してください。
+Bottom of the main screen → `Settings` → change the selectors → `Save`.
+Existing history is preserved; only subsequent analyses use the new pair.
 
-## ビルド
+### Reading the result
+
+- **Natural!** (green): the expression is natural — use it with confidence
+- **More natural way:** (red): a corrected sentence, explanation, and tip are shown
+
+### Export formats
+
+- **JSON**: all fields preserved (timestamp, targetLang, nativeLang, original, result{isNatural, corrected, explanation, tip})
+- **CSV**: 8 columns — `timestamp, target, native, isNatural, original, corrected, explanation, tip`. ISO8601 timestamps. UTF-8 with BOM
+
+## Build
 
 ```bash
-# プロダクションビルド
-npm run build
-
-# ビルド結果のプレビュー
-npm run preview
+npm run build       # production build
+npm run preview     # preview the build output
 ```
 
-ビルド成果物は `dist/` ディレクトリに出力されます。
+Output goes to `dist/`.
 
-## 技術スタック
+## Where data lives
 
-| カテゴリ | 技術 |
-|---------|------|
-| 言語 | TypeScript |
-| ビルドツール | Vite |
-| AI | OpenAI API (gpt-4o-mini) |
-| 音声認識 | Web Speech API |
-| グラス連携 | @evenrealities/even_hub_sdk |
+Everything is in the browser's LocalStorage. No cross-device sync. Keys:
+
+| Key | Content |
+|-----|---------|
+| `openai_api_key` | OpenAI API key |
+| `target_lang` | Target language code (en/ja/de/zh/fi) |
+| `native_lang` | Explanation language code |
+| `history` | JSON array of utterance records (latest 200) |
+
+The `Reset API key & languages` button deletes all of them.
+
+## Tech stack
+
+| Category | Tech |
+|----------|------|
+| Language | TypeScript |
+| Build | Vite |
+| Analysis | OpenAI `gpt-4o-mini` |
+| Speech-to-text | OpenAI `gpt-4o-mini-transcribe` (Whisper family) |
+| Audio capture | Even G2 mic (16 kHz / 16-bit PCM) |
+| Glasses SDK | `@evenrealities/even_hub_sdk` |
+| Persistence | LocalStorage |
+
+## File layout
+
+```
+src/
+  main.ts        UI, state management, export
+  openai.ts      chat completions / transcription
+  speech.ts      G2 mic control, WAV build
+  languages.ts   supported-language definitions
+  style.css      styles
+```
